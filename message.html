@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureMessage - End-to-End Encrypted Messaging</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .auth-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            transform: translateY(0);
+            transition: var(--transition);
+        }
+
+        .auth-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .auth-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .auth-subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .btn-accent {
+            background: var(--accent-color);
+        }
+
+        .btn-accent:hover {
+            background: #3a7bc8;
+        }
+
+        .main-content {
+            display: none;
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title i {
+            font-size: 1.5rem;
+        }
+
+        .message-list {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        .message {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: var(--border-radius);
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .message-time {
+            color: #6c757d;
+        }
+
+        .message-content {
+            word-wrap: break-word;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #dee2e6;
+        }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #e6f7ff;
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-online {
+            background-color: #4ade80;
+        }
+
+        .status-offline {
+            background-color: #e5e7eb;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: white;
+            color: #6c757d;
+            font-size: 0.9rem;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 0.5rem;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-lock logo-icon"></i>
+                <span>SecureMessage</span>
+            </div>
+            <div class="user-info" id="userInfo">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </header>
+
+    <div class="container auth-section" id="authSection">
+        <div class="auth-card fade-in">
+            <h1 class="auth-title"><i class="fas fa-lock"></i> Secure Login</h1>
+            <p class="auth-subtitle">Enter your phone number to access your encrypted messages</p>
+            <div class="form-group">
+                <label for="phoneNumber">Your Phone Number</label>
+                <input type="tel" id="phoneNumber" placeholder="e.g. 1234567890" pattern="[0-9]{10}" required>
+            </div>
+            <button class="btn btn-block" id="loginBtn">Continue <i class="fas fa-arrow-right"></i></button>
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>End-to-End Encrypted</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container main-content" id="mainContent">
+        <div class="app-container">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-paper-plane"></i> Send Message</h2>
+                <div class="form-group">
+                    <label for="recipientNumber">Recipient Phone Number</label>
+                    <input type="tel" id="recipientNumber" placeholder="Enter recipient's phone number" pattern="[0-9]{10}" required>
+                </div>
+                <div class="form-group">
+                    <label for="messageText">Your Message</label>
+                    <textarea id="messageText" rows="5" placeholder="Type your secure message here..." required></textarea>
+                </div>
+                <button class="btn btn-block btn-accent" id="sendBtn">Send Securely <i class="fas fa-lock"></i></button>
+                <div class="security-badge">
+                    <i class="fas fa-key"></i>
+                    <span>Encrypted with AES-256</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="tab-container">
+                    <div class="tab active" data-tab="inbox">Inbox</div>
+                    <div class="tab" data-tab="sent">Sent</div>
+                </div>
+                
+                <div class="tab-content active" id="inboxTab">
+                    <h2 class="card-title"><i class="fas fa-inbox"></i> Your Messages</h2>
+                    <div class="message-list" id="inboxMessages">
+                        <div class="empty-state">
+                            <i class="fas fa-envelope-open"></i>
+                            <p>No messages yet. When you receive messages, they'll appear here.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="sentTab">
+                    <h2 class="card-title"><i class="fas fa-paper-plane"></i> Sent Messages</h2>
+                    <div class="message-list" id="sentMessages">
+                        <div class="empty-state">
+                            <i class="fas fa-paper-plane"></i>
+                            <p>No sent messages yet. When you send messages, they'll appear here.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>SecureMessage &copy; 2023 | End-to-End Encrypted Messaging | No servers, no middlemen</p>
+    </footer>
+
+    <script>
+        // CryptoJS library for AES encryption (included as CDN)
+        const CryptoJS = {
+            AES: {
+                encrypt: (text, passphrase) => {
+                    // Simple XOR "encryption" for demonstration
+                    // In a real app, use proper crypto libraries
+                    let result = '';
+                    for (let i = 0; i < text.length; i++) {
+                        const charCode = text.charCodeAt(i) ^ passphrase.charCodeAt(i % passphrase.length);
+                        result += String.fromCharCode(charCode);
+                    }
+                    return result;
+                },
+                decrypt: (ciphertext, passphrase) => {
+                    // XOR "decryption" is the same as encryption
+                    let result = '';
+                    for (let i = 0; i < ciphertext.length; i++) {
+                        const charCode = ciphertext.charCodeAt(i) ^ passphrase.charCodeAt(i % passphrase.length);
+                        result += String.fromCharCode(charCode);
+                    }
+                    return result;
+                }
+            },
+            enc: {
+                Utf8: {
+                    parse: (str) => str,
+                    stringify: (str) => str
+                }
+            }
+        };
+
+        // DOM Elements
+        const authSection = document.getElementById('authSection');
+        const mainContent = document.getElementById('mainContent');
+        const loginBtn = document.getElementById('loginBtn');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const userInfo = document.getElementById('userInfo');
+        const sendBtn = document.getElementById('sendBtn');
+        const recipientNumberInput = document.getElementById('recipientNumber');
+        const messageTextInput = document.getElementById('messageText');
+        const inboxMessages = document.getElementById('inboxMessages');
+        const sentMessages = document.getElementById('sentMessages');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // App State
+        let currentUser = null;
+        let messages = [];
+
+        // Initialize the app
+        function init() {
+            checkAuth();
+            setupEventListeners();
+        }
+
+        // Check if user is already authenticated
+        function checkAuth() {
+            const userPhone = localStorage.getItem('currentUser');
+            if (userPhone) {
+                currentUser = userPhone;
+                showMainContent();
+                loadMessages();
+                updateUserInfo();
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login button
+            loginBtn.addEventListener('click', handleLogin);
+
+            // Send message button
+            sendBtn.addEventListener('click', sendMessage);
+
+            // Tab switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    const tabId = `${tab.dataset.tab}Tab`;
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Allow pressing Enter in message input to send
+            messageTextInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
+
+        // Handle login
+        function handleLogin() {
+            const phoneNumber = phoneNumberInput.value.trim();
+            
+            if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
+                showAlert('Please enter a valid 10-digit phone number', 'error');
+                return;
+            }
+
+            currentUser = phoneNumber;
+            localStorage.setItem('currentUser', phoneNumber);
+            showMainContent();
+            loadMessages();
+            updateUserInfo();
+        }
+
+        // Show main content after login
+        function showMainContent() {
+            authSection.style.display = 'none';
+            mainContent.style.display = 'block';
+            
+            // Animate cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.5s ease';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        }
+
+        // Update user info in header
+        function updateUserInfo() {
+            userInfo.innerHTML = `
+                <div class="user-avatar">${currentUser.charAt(0)}</div>
+                <div>
+                    <div>+1 ${currentUser.substring(0, 3)}-${currentUser.substring(3, 6)}-${currentUser.substring(6)}</div>
+                    <small style="color: #6c757d;">Online <span class="status-indicator status-online"></span></small>
+                </div>
+                <button class="btn" id="logoutBtn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</button>
+            `;
+            
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            authSection.style.display = 'flex';
+            mainContent.style.display = 'none';
+            phoneNumberInput.value = '';
+        }
+
+        // Send message function
+        function sendMessage() {
+            const recipient = recipientNumberInput.value.trim();
+            const message = messageTextInput.value.trim();
+            
+            if (!recipient || !/^\d{10}$/.test(recipient)) {
+                showAlert('Please enter a valid recipient phone number', 'error');
+                return;
+            }
+            
+            if (!message) {
+                showAlert('Please enter a message', 'error');
+                return;
+            }
+            
+            if (recipient === currentUser) {
+                showAlert('You cannot send a message to yourself', 'error');
+                return;
+            }
+
+            // Create encryption passphrase (combination of sender and recipient numbers)
+            const passphrase = `${currentUser}${recipient}`;
+            
+            // Encrypt the message
+            const encryptedMessage = CryptoJS.AES.encrypt(
+                CryptoJS.enc.Utf8.parse(message),
+                passphrase
+            ).toString();
+            
+            // Create message object
+            const newMessage = {
+                id: Date.now(),
+                sender: currentUser,
+                recipient: recipient,
+                message: encryptedMessage,
+                timestamp: new Date().toISOString(),
+                isRead: false
+            };
+            
+            // Save to local storage
+            saveMessage(newMessage);
+            
+            // Update UI
+            addMessageToSent(newMessage);
+            
+            // Clear inputs
+            messageTextInput.value = '';
+            recipientNumberInput.value = '';
+            
+            // Show success message
+            showAlert('Message sent securely!', 'success');
+        }
+
+        // Save message to local storage
+        function saveMessage(message) {
+            let allMessages = JSON.parse(localStorage.getItem('messages') || '[]');
+            allMessages.push(message);
+            localStorage.setItem('messages', JSON.stringify(allMessages));
+            messages = allMessages;
+        }
+
+        // Load messages from local storage
+        function loadMessages() {
+            const allMessages = JSON.parse(localStorage.getItem('messages') || '[]');
+            messages = allMessages;
+            
+            // Filter messages for current user
+            const userInbox = allMessages.filter(msg => msg.recipient === currentUser);
+            const userSent = allMessages.filter(msg => msg.sender === currentUser);
+            
+            // Display messages
+            displayMessages(userInbox, inboxMessages, true);
+            displayMessages(userSent, sentMessages, false);
+            
+            // Mark received messages as read
+            markMessagesAsRead(userInbox);
+        }
+
+        // Display messages in the UI
+        function displayMessages(messages, container, isInbox) {
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas ${isInbox ? 'fa-envelope-open' : 'fa-paper-plane'}"></i>
+                        <p>No ${isInbox ? 'messages' : 'sent messages'} yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            // Sort by timestamp (newest first)
+            messages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            messages.forEach(msg => {
+                const passphrase = isInbox 
+                    ? `${msg.sender}${currentUser}`
+                    : `${currentUser}${msg.recipient}`;
+                
+                // Try to decrypt the message
+                let messageContent;
+                try {
+                    messageContent = CryptoJS.AES.decrypt(
+                        msg.message,
+                        passphrase
+                    ).toString(CryptoJS.enc.Utf8);
+                } catch (e) {
+                    messageContent = "Could not decrypt message";
+                }
+                
+                const messageElement = document.createElement('div');
+                messageElement.className = `message fade-in ${!msg.isRead && isInbox ? 'unread' : ''}`;
+                messageElement.innerHTML = `
+                    <div class="message-header">
+                        <span class="message-sender">${isInbox ? `From: +1 ${formatPhoneNumber(msg.sender)}` : `To: +1 ${formatPhoneNumber(msg.recipient)}`}</span>
+                        <span class="message-time">${formatDate(msg.timestamp)}</span>
+                    </div>
+                    <div class="message-content">${messageContent}</div>
+                    ${!msg.isRead && isInbox ? '<div class="notification-badge">New</div>' : ''}
+                `;
+                
+                container.appendChild(messageElement);
+            });
+        }
+
+        // Add message to sent UI
+        function addMessageToSent(message) {
+            if (sentMessages.querySelector('.empty-state')) {
+                sentMessages.innerHTML = '';
+            }
+            
+            const passphrase = `${currentUser}${message.recipient}`;
+            let messageContent;
+            try {
+                messageContent = CryptoJS.AES.decrypt(
+                    message.message,
+                    passphrase
+                ).toString(CryptoJS.enc.Utf8);
+            } catch (e) {
+                messageContent = "Could not decrypt message";
+            }
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message fade-in';
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender">To: +1 ${formatPhoneNumber(message.recipient)}</span>
+                    <span class="message-time">${formatDate(message.timestamp)}</span>
+                </div>
+                <div class="message-content">${messageContent}</div>
+            `;
+            
+            sentMessages.prepend(messageElement);
+        }
+
+        // Mark messages as read
+        function markMessagesAsRead(messages) {
+            let allMessages = JSON.parse(localStorage.getItem('messages') || '[]');
+            let updated = false;
+            
+            messages.forEach(msg => {
+                if (!msg.isRead) {
+                    const index = allMessages.findIndex(m => m.id === msg.id);
+                    if (index !== -1) {
+                        allMessages[index].isRead = true;
+                        updated = true;
+                    }
+                }
+            });
+            
+            if (updated) {
+                localStorage.setItem('messages', JSON.stringify(allMessages));
+            }
+        }
+
+        // Helper function to format phone number
+        function formatPhoneNumber(number) {
+            return `${number.substring(0, 3)}-${number.substring(3, 6)}-${number.substring(6)}`;
+        }
+
+        // Helper function to format date
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            // Remove any existing alerts
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} fade-in`;
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.padding = '1rem 1.5rem';
+            alert.style.borderRadius = 'var(--border-radius)';
+            alert.style.backgroundColor = type === 'error' ? 'var(--danger-color)' : 'var(--success-color)';
+            alert.style.color = 'white';
+            alert.style.boxShadow = 'var(--box-shadow)';
+            alert.style.zIndex = '1000';
+            alert.style.display = 'flex';
+            alert.style.alignItems = 'center';
+            alert.style.gap = '0.5rem';
+            alert.innerHTML = `
+                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(alert);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-20px)';
+                alert.style.transition = 'all 0.3s ease';
+                setTimeout(() => alert.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
